@@ -5,7 +5,7 @@ import random
 class Animal(Agent):
 	WIDTH = 1000 #game window width
 	HEIGHT = 1000 #game window height
-	ENV = 0
+
 	def __init__(self, x, y):
 		super().__init__(x, y)
 
@@ -33,7 +33,6 @@ class Animal(Agent):
 			"evade": 0
 		}
 
-		self.max_desire = "eat"
 		self.is_alive = True
 		self.speed = 60
 		self.ticks_alive = 0
@@ -42,6 +41,9 @@ class Animal(Agent):
 		self.detected = "nothing"
 		self.base_jitter = 1
 		self.eat_range = 5
+
+		self.tickstoDeathMovement = 400
+		self.tickstoDeathHunger = 200
 
 	def __str__(self):
 		return "Animal name = " + str(id(self))
@@ -57,14 +59,15 @@ class Animal(Agent):
 				if (min_dist > dist): # if this is a new closest plant
 					min_dist = dist
 					target = plant
-					print(min_dist)
-
+					#print(min_dist)
 		return target
 
 	def healthChecks(self):
 		self.ticks_alive = self.ticks_alive + 1
 		self.health["thirst"] += .001 * self.genes["water_need"]
-		self.health["hunger"] += .01
+		self.health["hunger"] += 1 / self.tickstoDeathHunger
+		self.health["reproductive_urge"] = min(self.health["reproductive_urge"]+ .01, 0.5)
+
 		#print(self.health["hunger"])
 		if self.health["hunger"] > 3:
 			self.state = "dead"
@@ -75,6 +78,13 @@ class Animal(Agent):
 	def distanceToAgent(self, agent):
 		return math.sqrt((agent.x_pos - self.x_pos)**2 + (agent.y_pos - self.y_pos)**2)
 
+	def getDesire(self):
+		self.desires["eat"] = self.health["hunger"]
+		self.desires["sleep"] = self.health["tiredness"]
+		max_desire = max(self.desires, key=self.desires.get)
+		print("Max Desire = " + max_desire)
+		print(self.desires)
+		return(max_desire)
 
 
 	def update(self, env):
@@ -82,29 +92,20 @@ class Animal(Agent):
 		if self.healthChecks():
 			return
 
-		if True:
-			self.dir = (self.dir + random.uniform(-self.base_jitter,self.base_jitter)) % 360
-			target_plant = self.closestPlant(env)
+		current_desire = self.getDesire()
 
+		if current_desire == "eat":
+			self.findFood(env)
+		
+		elif current_desire == "reproduce":
+			self.reproduce(env)
 
+		elif current_desire == "sleep":
+			self.sleep()
 
-			if (target_plant is not None): # this means that we found a plant
-
-				self.dir = self.angle_to(target_plant.x_pos, target_plant.y_pos)
-				self.detected = "plant"
-
-				if (self.distanceToAgent(target_plant) <= self.eat_range):
-					self.consume(env, target_plant)
-				else:
-					self.move()
-
-
-			else:
-				#print("None")
-				if (self.health["hunger"] < .09) and (random.random() < .05):
-					self.state = "reproduced"
-				self.detected = "nothing"
-				self.move()
+		else: # we go exploring
+			self.explore()
+			
 
 
 	def move(self):
@@ -114,6 +115,7 @@ class Animal(Agent):
 		y_tmp = self.y_pos + self.genes["speed"] * math.sin(math.radians(self.dir))/norm
 		#print(self.dir)
 
+		# handle collisions
 		if (x_tmp > self.WIDTH) or (x_tmp < 0):
 			self.dir = (180 - self.dir) % 360
 		if (y_tmp > self.HEIGHT) or (y_tmp < 0):
@@ -122,20 +124,51 @@ class Animal(Agent):
 		else:
 			self.y_pos = y_tmp
 			self.x_pos = x_tmp
+		
+		self.health["tiredness"] += self.genes["speed"] / self.tickstoDeathMovement
+
+	def explore(self):
+		self.dir = (self.dir + random.uniform(-self.base_jitter,self.base_jitter)) % 360
+		self.move()
+
+
+	def angle_to(self, x_tar, y_tar):
+		return math.atan2(y_tar-self.y_pos, x_tar-self.x_pos) * 180 / math.pi
+
+
+	### Actions to take
+
+	def findFood(self, env):
+		target_plant = self.closestPlant(env)
+		if (target_plant is not None): # this means that we found a plant
+
+			self.dir = self.angle_to(target_plant.x_pos, target_plant.y_pos)
+			self.detected = "plant"
+
+			if (self.distanceToAgent(target_plant) <= self.eat_range):
+				self.consume(env, target_plant)
+			else:
+				self.move()
+		else:
+			self.explore()
+
 
 	def consume(self, env, target):
 		if target.isAvailable():
-			self.health["hunger"] = max(0, self.health["hunger"] - target.eat(.05))
+			self.health["hunger"] = max(0, self.health["hunger"] - target.eat(.2))
 			print("Eating: " + str(self.health["hunger"]))
 		else:
 			print("not eating")
 
 
 
+	def reproduce(self):
+		if (self.health["hunger"] < .09) and (random.random() < .05):
+			print("WE MADE A BABY")
+			self.state = "reproduced"
+			self.health["reproductive_urge"] = 0
 
-	def angle_to(self, x_tar, y_tar):
-		return math.atan2(y_tar-self.y_pos, x_tar-self.x_pos) * 180 / math.pi
+	def sleep(self):
+		# we don't do anything except decrease the tiredness
 
-		# print(self.x_pos,self.y_pos)
-
-
+		self.health["tiredness"] = max(0, self.health["tiredness"] - (1 / self.tickstoDeathMovement) * 3)

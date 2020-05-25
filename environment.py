@@ -18,6 +18,9 @@ class Environment:
     Species.Carrot: []
   }
 
+  def sense(self, x,y, Species):
+    pass
+
   def update(self):
     self.ticks+=1
 
@@ -29,7 +32,6 @@ class Environment:
     for spec in self.animals.keys():
       for animal in self.animals[spec]:
         animal.update(self)
-        print(animal)
         if animal.state == "dead":
           self.animals[Species.Rabbit].remove(animal)
         elif animal.state == "reproduced":

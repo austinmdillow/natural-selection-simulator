@@ -1,2 +1,7 @@
 class Surroundings:
-  self.closest_plant = 1
+  def __init__(self):
+    self.closest_plant = None
+    self.closest_mate = None
+    self.closest_water = None
+    self.closest_predator = None
+  

@@ -23,5 +23,6 @@ class Food(Agent):
 			else:
 				amount_eaten = self.nutrients # eat all the nutrients left
 				self.nutrients = 0
+				
 
 		return amount_eaten

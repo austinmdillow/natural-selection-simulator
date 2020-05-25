@@ -16,8 +16,8 @@ GREEN = (0, 255, 0)
 WHITE = (255, 255, 255)
 WIDTH = 1000 #game window width
 HEIGHT = 1000 #game window height
-FPS = 3 # frames per second setting
-TICKS_PER_DAY = FPS * 15
+FPS = 10 # frames per second setting
+TICKS_PER_DAY = FPS * 60
 NUM_ANIMALS_START = 1
 NUM_FOOD_START = 30
 
@@ -74,7 +74,6 @@ def main():
 
 	while True: # main game loop
 		
-		
 		for event in pygame.event.get():
 
 			if event.type == QUIT:
@@ -88,17 +87,13 @@ def main():
 			pygame.quit()
 			sys.exit()
 
-		#update_environment()
 		environment.update()
 		draw_actors(Base_Surf)
 		draw_boundary(Base_Surf)
 		draw_stats(Base_Surf, font)
-		# Base_Surf.blit(bunny_img,(300+i,300))
-
 
 		pygame.display.update()
 		fpsClock.tick(FPS)
-		#print(fpsClock.get_fps())
 		ticks += 1
 
 
