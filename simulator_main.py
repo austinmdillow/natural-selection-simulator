@@ -3,9 +3,12 @@ VERSION = 0.1
 
 import pygame, sys
 from pygame.locals import *
+from environment import Environment
 from animal import Animal
 from food import Food
 from time import sleep
+from species import Species
+
 import random
 
 RED = (255, 0, 0)
@@ -13,42 +16,26 @@ GREEN = (0, 255, 0)
 WHITE = (255, 255, 255)
 WIDTH = 1000 #game window width
 HEIGHT = 1000 #game window height
-FPS = 300 # frames per second setting
-TICKS_PER_DAY = FPS * 60
-NUM_ANIMALS_START = 10
+FPS = 3 # frames per second setting
+TICKS_PER_DAY = FPS * 15
+NUM_ANIMALS_START = 1
 NUM_FOOD_START = 30
 
 fpsClock = pygame.time.Clock()
 bunny_img = pygame.image.load('resources/cat.jpg')
-animals_alive = []
-plant_list = []
-animal_test = Animal(100,100)
-Environment = {"animals_alive": animals_alive, "plant_list": plant_list}
-walls = []
+walls = [] 
+
+environment = Environment(NUM_ANIMALS_START,NUM_FOOD_START)
 
 
-
-def update_environment():
-	for animal in Environment["animals_alive"]:
-		animal.update(Environment)
-		if animal.state == "dead":
-			Environment["animals_alive"].remove(animal)
-		elif animal.state == "reproduced":
-			print(str(id(animal)) + " created an offspring")
-			addAnimal(animal.x_pos, animal.y_pos);
 
 def draw_boundary(surface):
 	pass #pygame.draw.walls[0]
 
-def init_environment(num_animals, num_plants):
-
-	init_animals(num_animals)
-	init_food(num_plants)
-
 
 def draw_actors(surface):
 	surface.fill((0,0,0))
-	for animal in Environment["animals_alive"]:
+	for animal in environment.animals[Species.Rabbit]:
 		x = animal.x_pos
 		y = animal.y_pos
 
@@ -59,40 +46,23 @@ def draw_actors(surface):
 			circle_color = GREEN
 		else:
 			circle_color = WHITE
-		pygame.draw.circle(surface, circle_color, (int(x), int(y)), animal_test.genes["sense"],1)
+		pygame.draw.circle(surface, circle_color, (int(x), int(y)), animal.genes["sense"],1)
 
-	for i in range(len(plant_list)):
-		x = plant_list[i].x_pos
-		y = plant_list[i].y_pos
-		size = plant_list[i].size
+	for plant in environment.plants[Species.Carrot]:
+		x = plant.x_pos
+		y = plant.y_pos
+		size = plant.size
 		pygame.draw.rect(surface, GREEN, (x, y, 1 * size, 1 * size))
 
 def draw_stats(surface, font):
-	text = font.render(str(len(Environment["animals_alive"])), True, GREEN, WHITE)
+	text = font.render(str(len(environment.animals[Species.Rabbit])), True, GREEN, WHITE)
 	surface.blit(text, (50,50))
 
-def addAnimal(x, y):
-	animals_alive.append(Animal(x, y))
-
-def init_animals(number):
-	for i in range(number):
-		animals_alive.append(Animal(random.uniform(50, WIDTH - 50), random.uniform(50, HEIGHT - 50)))
-
-
-	for i in range(len(animals_alive)):
-		pass
-		#print(animals_alive[i])
-		#print(id(animals_alive[i]))
-
-def init_food(number):
-	for i in range(number):
-		plant_list.append(Food(random.uniform(50, WIDTH - 50),random.uniform(50, HEIGHT - 50)))
 
 
 def main():
 	pygame.init()
-	init_environment(NUM_ANIMALS_START, NUM_FOOD_START)
-	#sleep(2)
+	
 
 	Base_Surf = pygame.display.set_mode((WIDTH, HEIGHT),0,32)
 	walls.append(pygame.Rect(0, 0, WIDTH, 1))
@@ -113,15 +83,13 @@ def main():
 			if event.type == KEYUP:
 				sleep(2)
 
-		if ticks % 10 == 0:
-			plant_list.append(Food(random.uniform(50, WIDTH - 50),random.uniform(50, HEIGHT - 50)))
-
 
 		if ticks > TICKS_PER_DAY:
 			pygame.quit()
 			sys.exit()
 
-		update_environment()
+		#update_environment()
+		environment.update()
 		draw_actors(Base_Surf)
 		draw_boundary(Base_Surf)
 		draw_stats(Base_Surf, font)

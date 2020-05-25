@@ -1,4 +1,5 @@
 from agent import Agent
+from species import Species
 import math
 import random
 class Animal(Agent):
@@ -31,8 +32,8 @@ class Animal(Agent):
 			"reproduce": 0,
 			"evade": 0
 		}
-		self.max_desire = "eat"
 
+		self.max_desire = "eat"
 		self.is_alive = True
 		self.speed = 60
 		self.ticks_alive = 0
@@ -42,10 +43,15 @@ class Animal(Agent):
 		self.base_jitter = 1
 		self.eat_range = 5
 
+	def __str__(self):
+		return "Animal name = " + str(id(self))
+		#print("x , y = " + str(self.x_pos) + ", " + str(self.y_pos) )
+		#print("Hunger: " + str(self.health["hunger"]))
+
 	def closestPlant(self, env):
 		target = None
 		min_dist = 100000
-		for plant in env["plant_list"]:
+		for plant in env.plants[Species.Carrot]:
 			dist = self.distanceToAgent(plant)
 			if (dist <= self.genes["sense"]):
 				if (min_dist > dist): # if this is a new closest plant
@@ -122,7 +128,6 @@ class Animal(Agent):
 			self.health["hunger"] = max(0, self.health["hunger"] - target.eat(.05))
 			print("Eating: " + str(self.health["hunger"]))
 		else:
-			print(env["plant_list"].remove(target))
 			print("not eating")
 
 
