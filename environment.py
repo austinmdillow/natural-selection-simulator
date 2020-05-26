@@ -2,7 +2,9 @@ from species import Species
 from animal import Animal
 from food import Food
 from time import sleep
+from surroundings import Surroundings
 import random
+import math
 
 class Environment:
   WIDTH = 1000 #game window width
@@ -18,8 +20,36 @@ class Environment:
     Species.Carrot: []
   }
 
-  def sense(self, x,y, Species):
-    pass
+  def distanceToAgent(self, agent1, agent2):
+    return math.sqrt((agent1.x_pos - self.x_pos)**2 + (agent.y_pos - self.y_pos)**2)
+
+  def distanceToCoord(self, coord1, coord2):
+    return math.sqrt((coord2.x - coord1.x)**2 + (coord2.y - coord1.y)**2)
+
+  def sense(self, coord, species):
+    surrounding_res = Surroundings()
+    for spec in self.animals.keys():
+      for animal in self.animals[spec]:
+        pass
+
+    for spec in self.plants.keys():
+      for plant in self.plants[spec]:
+        plant_dist = self.distanceToCoord(coord, plant.coord)
+        if (surrounding_res.closest_plant is None):
+          if (plant_dist < 50): # TODO FIX
+            surrounding_res.closest_plant = plant
+            surrounding_res.closest_plant_dist = plant_dist
+
+        elif (plant_dist < surrounding_res.closest_plant_dist):
+          surrounding_res.closest_plant = plant
+          surrounding_res.closest_plant_dist = plant_dist
+
+
+    return surrounding_res
+
+    
+
+
 
   def update(self):
     self.ticks+=1

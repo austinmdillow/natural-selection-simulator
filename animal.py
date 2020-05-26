@@ -1,10 +1,10 @@
-from agent import Agent
+from entity import Entity
 from species import Species
 import math
 import random
 import time
 
-class Animal(Agent):
+class Animal(Entity):
 	WIDTH = 1000 #game window width
 	HEIGHT = 1000 #game window height
 
@@ -131,6 +131,8 @@ class Animal(Agent):
 			self.y_pos = y_tmp
 			self.x_pos = x_tmp
 		
+		self.coord.updateXY(self.x_pos, self.y_pos)
+		
 		self.health["tiredness"] += self.genes["speed"] / self.tickstoDeathMovement
 
 	def explore(self):
@@ -146,6 +148,11 @@ class Animal(Agent):
 
 	def findFood(self, env):
 		target_plant = self.closestPlant(env)
+		target_plant2 = env.sense(self.coord, Species.Rabbit).closest_plant
+
+		print ("eval = " + str(target_plant == target_plant2))
+		if target_plant != target_plant2:
+			sleep(50)
 		if (target_plant is not None): # this means that we found a plant
 
 			self.dir = self.angle_to(target_plant.x_pos, target_plant.y_pos)
