@@ -16,10 +16,10 @@ GREEN = (0, 255, 0)
 WHITE = (255, 255, 255)
 WIDTH = 1000 #game window width
 HEIGHT = 1000 #game window height
-FPS = 10 # frames per second setting
-TICKS_PER_DAY = FPS * 60
+FPS = 300 # frames per second setting
+TICKS_PER_DAY = FPS * 60000
 NUM_ANIMALS_START = 1
-NUM_FOOD_START = 30
+NUM_FOOD_START = 1000
 
 fpsClock = pygame.time.Clock()
 bunny_img = pygame.image.load('resources/cat.jpg')

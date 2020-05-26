@@ -25,7 +25,7 @@ class Environment:
     self.ticks+=1
 
 
-    if self.ticks % 10 == 0:
+    if self.ticks % 5 == 0:
       self.plants[Species.Carrot].append(Food(random.uniform(50, self.WIDTH - 50),random.uniform(50, self.HEIGHT - 50)))
 
 

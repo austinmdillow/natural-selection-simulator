@@ -2,6 +2,8 @@ from agent import Agent
 from species import Species
 import math
 import random
+import time
+
 class Animal(Agent):
 	WIDTH = 1000 #game window width
 	HEIGHT = 1000 #game window height
@@ -19,7 +21,7 @@ class Animal(Agent):
 
 		self.health = {
 			"thirst": .1,
-			"hunger": .1,
+			"hunger": .5,
 			"reproductive_urge": .1,
 			"tiredness": .1
 		}
@@ -33,7 +35,7 @@ class Animal(Agent):
 			"evade": 0
 		}
 
-		self.is_alive = True
+		self._is_alive = True
 		self.speed = 60
 		self.ticks_alive = 0
 		self.dir = random.uniform(0,360)
@@ -44,6 +46,7 @@ class Animal(Agent):
 
 		self.tickstoDeathMovement = 400
 		self.tickstoDeathHunger = 200
+		self.lastReproductionTime = 400
 
 	def __str__(self):
 		return "Animal name = " + str(id(self))
@@ -81,9 +84,12 @@ class Animal(Agent):
 	def getDesire(self):
 		self.desires["eat"] = self.health["hunger"]
 		self.desires["sleep"] = self.health["tiredness"]
+		self.desires["reproduce"] = 0 if self.desires["eat"] > .3 or self.desires["sleep"] >.3 or (self.ticks_alive - self.lastReproductionTime <= 400)  else self.health["reproductive_urge"]
 		max_desire = max(self.desires, key=self.desires.get)
 		print("Max Desire = " + max_desire)
+		print((self.ticks_alive - self.lastReproductionTime >= 400))
 		print(self.desires)
+
 		return(max_desire)
 
 
@@ -98,7 +104,7 @@ class Animal(Agent):
 			self.findFood(env)
 		
 		elif current_desire == "reproduce":
-			self.reproduce(env)
+			self.reproduce()
 
 		elif current_desire == "sleep":
 			self.sleep()
@@ -150,6 +156,7 @@ class Animal(Agent):
 			else:
 				self.move()
 		else:
+			self.detected = "nothing"
 			self.explore()
 
 
@@ -163,7 +170,8 @@ class Animal(Agent):
 
 
 	def reproduce(self):
-		if (self.health["hunger"] < .09) and (random.random() < .05):
+		if (random.random() < .01):
+			self.lastReproductionTime = self.ticks_alive
 			print("WE MADE A BABY")
 			self.state = "reproduced"
 			self.health["reproductive_urge"] = 0
