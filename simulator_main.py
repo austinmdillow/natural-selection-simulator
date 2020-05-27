@@ -18,8 +18,8 @@ WIDTH = 1000 #game window width
 HEIGHT = 1000 #game window height
 FPS = 300 # frames per second setting
 TICKS_PER_DAY = FPS * 60000
-NUM_ANIMALS_START = 1
-NUM_FOOD_START = 1000
+NUM_ANIMALS_START = 100
+NUM_FOOD_START = 100
 
 fpsClock = pygame.time.Clock()
 bunny_img = pygame.image.load('resources/cat.jpg')
@@ -55,12 +55,15 @@ def draw_actors(surface):
 		pygame.draw.rect(surface, GREEN, (x, y, 1 * size, 1 * size))
 
 def draw_stats(surface, font):
-	text = font.render(str(len(environment.animals[Species.Rabbit])), True, GREEN, WHITE)
+	text = font.render("Alive: " + str(len(environment.animals[Species.Rabbit])), True, GREEN, WHITE)
+	text2 = font.render("FPS: " + str(FPS) + " " + str(int(fpsClock.get_fps())), True, GREEN, WHITE)
 	surface.blit(text, (50,50))
+	surface.blit(text2, (50,100))
 
 
 
 def main():
+	global FPS
 	pygame.init()
 	
 
@@ -79,8 +82,11 @@ def main():
 			if event.type == QUIT:
 				pygame.quit()
 				sys.exit()
-			if event.type == KEYUP:
-				sleep(2)
+			elif event.type == pygame.KEYDOWN:
+				if event.key == K_UP:
+					FPS += 5
+				elif event.key == K_DOWN:
+					FPS = max(0, FPS - 5)
 
 
 		if ticks > TICKS_PER_DAY:

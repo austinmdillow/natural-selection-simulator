@@ -35,6 +35,8 @@ class Animal(Entity):
 			"evade": 0
 		}
 
+		self._sex = random.choice(['m', 'f'])
+
 		self._is_alive = True
 		self.speed = 60
 		self.ticks_alive = 0
@@ -52,18 +54,6 @@ class Animal(Entity):
 		return "Animal name = " + str(id(self))
 		#print("x , y = " + str(self.x_pos) + ", " + str(self.y_pos) )
 		#print("Hunger: " + str(self.health["hunger"]))
-
-	def closestPlant(self, env):
-		target = None
-		min_dist = 100000
-		for plant in env.plants[Species.Carrot]:
-			dist = self.distanceToAgent(plant)
-			if (dist <= self.genes["sense"]):
-				if (min_dist > dist): # if this is a new closest plant
-					min_dist = dist
-					target = plant
-					#print(min_dist)
-		return target
 
 	def healthChecks(self):
 		self.ticks_alive = self.ticks_alive + 1
@@ -87,8 +77,6 @@ class Animal(Entity):
 		self.desires["reproduce"] = 0 if self.desires["eat"] > .3 or self.desires["sleep"] >.3 or (self.ticks_alive - self.lastReproductionTime <= 400)  else self.health["reproductive_urge"]
 		max_desire = max(self.desires, key=self.desires.get)
 		print("Max Desire = " + max_desire)
-		print((self.ticks_alive - self.lastReproductionTime >= 400))
-		print(self.desires)
 
 		return(max_desire)
 
@@ -147,12 +135,8 @@ class Animal(Entity):
 	### Actions to take
 
 	def findFood(self, env):
-		target_plant = self.closestPlant(env)
-		target_plant2 = env.sense(self.coord, Species.Rabbit).closest_plant
+		target_plant = env.sense(self).closest_plant
 
-		print ("eval = " + str(target_plant == target_plant2))
-		if target_plant != target_plant2:
-			sleep(50)
 		if (target_plant is not None): # this means that we found a plant
 
 			self.dir = self.angle_to(target_plant.x_pos, target_plant.y_pos)

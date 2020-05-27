@@ -21,20 +21,20 @@ class Environment:
   }
 
   def distanceToAgent(self, agent1, agent2):
-    return math.sqrt((agent1.x_pos - self.x_pos)**2 + (agent.y_pos - self.y_pos)**2)
+    return math.sqrt((agent2.coord.x - agent1.coord.x)**2 + (agent2.coord.y - agent1.coord.y)**2)
 
   def distanceToCoord(self, coord1, coord2):
     return math.sqrt((coord2.x - coord1.x)**2 + (coord2.y - coord1.y)**2)
 
-  def sense(self, coord, species):
+  def sense(self, animal_base):
     surrounding_res = Surroundings()
     for spec in self.animals.keys():
-      for animal in self.animals[spec]:
+      for animal2 in self.animals[spec]:
         pass
 
     for spec in self.plants.keys():
       for plant in self.plants[spec]:
-        plant_dist = self.distanceToCoord(coord, plant.coord)
+        plant_dist = self.distanceToAgent(animal_base, plant)
         if (surrounding_res.closest_plant is None):
           if (plant_dist < 50): # TODO FIX
             surrounding_res.closest_plant = plant
