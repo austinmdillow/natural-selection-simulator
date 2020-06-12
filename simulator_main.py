@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 print("Simulator")
 VERSION = 0.1
 
@@ -9,6 +10,7 @@ from coord import Coord
 from food import Food
 from time import sleep
 from species import Species
+from data_visualizer import DataVisualizer
 
 import random
 
@@ -22,13 +24,13 @@ HEIGHT = 1000 #game window height
 FPS = 10 # frames per second setting
 TICKS_PER_DAY = FPS * 6000
 NUM_ANIMALS_START = 1
-NUM_FOOD_START = 100
+NUM_FOOD_START = 10
 
 fpsClock = pygame.time.Clock()
 bunny_img = pygame.image.load('resources/cat.jpg')
 walls = [] 
 environment = Environment(NUM_ANIMALS_START,NUM_FOOD_START, HEIGHT, WIDTH)
-
+data = DataVisualizer(environment)
 
 
 def draw_boundary(surface):
@@ -45,14 +47,13 @@ def draw_actors(surface, selected_animal):
 
 		if animal == selected_animal:
 			animal_color = BLUE
-		pygame.draw.rect(surface, animal_color, (x, y, 1 * animal.size, 1 * animal.size))
-		#print(.collide)
+		pygame.draw.rect(surface, animal_color, (x, y, 1 * animal.genes.size, 1 * animal.genes.size))
 
 		if animal.detected == "plant":
 			circle_color = GREEN
 		else:
 			circle_color = WHITE
-		pygame.draw.circle(surface, circle_color, (int(x), int(y)), animal.genes.sense,1)
+		pygame.draw.circle(surface, circle_color, (int(x), int(y)), int(animal.genes.sense), 1)
 
 	for animal in environment.animals[Species.Rabbit]:
 		x = animal.coord.x
@@ -62,26 +63,26 @@ def draw_actors(surface, selected_animal):
 		if animal == selected_animal:
 			animal_color = BLUE
 
-		pygame.draw.rect(surface, animal_color, (x, y, 1 * animal.size, 1 * animal.size))
-		#print(.collide)
+		pygame.draw.rect(surface, animal_color, (x, y, 1 * animal.genes.size, 1 * animal.genes.size))
 
 		if animal.detected == "plant":
 			circle_color = GREEN
 		else:
 			circle_color = WHITE
-		pygame.draw.circle(surface, circle_color, (int(x), int(y)), animal.genes.sense,1)
+		pygame.draw.circle(surface, circle_color, (int(x), int(y)), int(animal.genes.sense), 1)
 
 	for plant in environment.plants[Species.Carrot]:
 		x = plant.coord.x
 		y = plant.coord.y
-		size = plant.size
+		size = plant.genes.size
 		pygame.draw.rect(surface, GREEN, (x, y, 1 * size, 1 * size))
 
 def draw_stats(surface, font):
-	text = font.render("Alive: " + str(len(environment.animals[Species.Rabbit])), True, GREEN, WHITE)
+	text = font.render("Alive: " + str(len(environment.animals[Species.Rabbit])) + ", " + str(len(environment.animals[Species.Fox])), True, GREEN, WHITE)
 	text2 = font.render("FPS: " + str(FPS) + " " + str(int(fpsClock.get_fps())), True, GREEN, WHITE)
 	surface.blit(text, (50,50))
 	surface.blit(text2, (50,100))
+	# data.plotPopulations()
 
 
 def main():
@@ -130,6 +131,7 @@ def main():
 				selected_animal = environment.closestAnimal(Coord(x_mouse, y_mouse, 0))
 				selected_animal._debug = True
 				selected_animal.printDebug()
+				environment.printStats(Species.Rabbit)
 				draw_actors(Base_Surf, selected_animal)
 
 		if (not is_paused):
@@ -144,7 +146,6 @@ def main():
 		
 		pygame.display.update()
 		
-
 
 if __name__ == '__main__':
 	main()

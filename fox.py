@@ -7,5 +7,7 @@ class Fox(Animal):
 		self._species = Species.Fox
 
 		self.genes.sense = 70
+		self.genes.speed = 3
+		self.genes.size = 10
 		
 		self.definedSpeciesCheck()

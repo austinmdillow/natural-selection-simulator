@@ -1,8 +1,9 @@
 from entity import Entity
+from genes import Genes
 class Food(Entity):
 	def __init__(self, x, y):
 		super().__init__(x,y)
-		self.size = 5.0
+		self.genes = Genes(Genes.Plant)
 		self.range = 10.0
 		self.nutrients = 1.
 		self.type = "food"

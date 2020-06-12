@@ -8,28 +8,20 @@ import time
 class Animal(Entity):
 	WIDTH = 1000 #game window width
 	HEIGHT = 1000 #game window height
+	AVG_AGE = 6000
 
 	def __init__(self, x, y):
 		super().__init__(x, y)
-
-		self.genes = {
-			"sense": 50,
-			"speed": 5.0,
-			"size": 3.0,
-			"water_need": 1.0
-		}
-
-		self.genes = Genes()
-
+		self.genes = Genes(Genes.Animal) # hold all of the traits that can mutate
 
 		self.health = {
 			"thirst": .1,
 			"hunger": .5,
 			"reproductive_urge": .1,
-			"tiredness": .1
+			"tiredness": .1,
+			"age": 0
 		}
 
-		
 		self.desires = {
 			"eat": 0,
 			"drink": 0,
@@ -37,23 +29,23 @@ class Animal(Entity):
 			"reproduce": 0,
 			"evade": 0
 		}
-		self._debug = False
+
+		self._debug = False # for printing out info about a single instance of animal
 
 		self._sex = random.choice(['m', 'f'])
 		self._species = None # IMPLEMENT AT A LOWER LEVEL
-
+		self.reproductionPeriod = 400
 		self._is_alive = True
-		self.speed = 60
-		self.ticks_alive = 0
 		self.dir = random.uniform(0,360)
 		self.state = "explore"
 		self.detected = "nothing"
-		self.base_jitter = 1
+		self.base_jitter = 5
 		self.eat_range = 5
-		self.lastAction = "nothing"
+		self.lastAction = "eat"
+		self.ageOfDeath = random.normalvariate(5000, 1000)
 
 
-		self.tickstoDeathMovement = 400
+		self.tickstoDeathAwake = 400
 		self.tickstoDeathHunger = 400
 		self.lastReproductionTime = 400
 
@@ -67,9 +59,11 @@ class Animal(Entity):
 		for k, v in self.health.items():
 			print(str(k) + ": %.2f"%v, end =". ")
 		print()
-		for k, v in self.desires.items():
-			print(str(k) + ": %.2f"%v, end =". ")
-		print()
+		print(self.genes.printDebug())
+		#
+		#for k, v in self.desires.items():
+		#	print(str(k) + ": %.2f"%v, end =". ")
+		#print()
 		print("Last Action = " + self.lastAction)
 	
 	def definedSpeciesCheck(self):
@@ -78,29 +72,37 @@ class Animal(Entity):
 			raise Exception("Need to define species")
 
 	def healthChecks(self):
-		self.ticks_alive = self.ticks_alive + 1
+		self.health["age"] += 1
 		self.health["thirst"] += .001
-		self.health["hunger"] += 1 / self.tickstoDeathHunger
 		self.health["reproductive_urge"] = min(self.health["reproductive_urge"]+ .01, 0.5)
+		self.health["hunger"] += (1 / self.tickstoDeathHunger) * self.genes.speed ** 2 * self.genes.size ** 3 * 1 / (10**2 * 5**3)
 
 		#print(self.health["hunger"])
-		if self.health["hunger"] > 3:
+		if self.health["hunger"] > 1:
+			self.state = "dead"
+			return True
+		elif self.health["age"] >= self.ageOfDeath:
 			self.state = "dead"
 			return True
 		else:
 			return False
 
 	def getDesire(self, env, surroundings):
-
-		
-
+		criticalDesire = .7
+		indifference_desire = .05
 		self.desires["eat"] = self.health["hunger"]
 		self.desires["sleep"] = self.health["tiredness"]
-		self.desires["reproduce"] = 0 if self.desires["eat"] > .3 or self.desires["sleep"] >.3 or (self.ticks_alive - self.lastReproductionTime <= 400)  else self.health["reproductive_urge"]
+		self.desires["reproduce"] = 0 if self.desires["eat"] > .3 or self.desires["sleep"] >.3 or (self.health["age"] - self.lastReproductionTime <= self.reproductionPeriod)  else self.health["reproductive_urge"]
 		self.desires["evade"] = 0 if surroundings.closest_predator is None else 1
 		
 		max_desire = max(self.desires, key=self.desires.get)
-		# print("Max Desire = " + max_desire)
+
+		if self.desires[max_desire] < criticalDesire and self.desires[self.lastAction] > indifference_desire:
+			max_desire = self.lastAction
+
+		if (self._debug):
+			print("Max Desire = " + max_desire)
+
 
 		return(max_desire)
 
@@ -109,8 +111,11 @@ class Animal(Entity):
 		self.state = "explore"
 		if self.healthChecks():
 			return
-
+		t1 = time.time()
 		surroundings = env.sense(self)
+		t2 = time.time()
+		if (self._debug):
+			print(t2-t1)
 		current_desire = self.getDesire(env, surroundings)
 
 		if current_desire == "eat":
@@ -129,7 +134,7 @@ class Animal(Entity):
 		else: # we go exploring
 			self.explore()
 		
-		self.lastAction = current_desire
+		self.lastAction = current_desire # save our last action. assumes we do carry through
 			
 
 
@@ -145,17 +150,15 @@ class Animal(Entity):
 			self.coord.dir = (180 - self.coord.dir) % 360
 		if (y_tmp > self.HEIGHT) or (y_tmp < 0):
 		 	self.coord.dir = (-(self.coord.dir)) % 360
-
+		# if there is no collision
 		else:
 			self.coord.updateXY(x_tmp, y_tmp)
 		
-		
-		
-		# TODO add this back in
-		# self.health["tiredness"] += self.genes["speed"] / self.tickstoDeathMovement
+		self.health["tiredness"] += 1 / self.tickstoDeathAwake # if moving then most likely awake
+		self.health["hunger"] += self.genes.speed**2 / self.tickstoDeathHunger * .01
 
 	def explore(self):
-		self.dir = (self.dir + random.uniform(-self.base_jitter,self.base_jitter)) % 360
+		self.coord.dir = (self.coord.dir + random.uniform(-self.base_jitter,self.base_jitter)) % 360
 		self.move()
 
 
@@ -181,7 +184,7 @@ class Animal(Entity):
 
 	def consume(self, env, target):
 		if target.isAvailable():
-			self.health["hunger"] = max(0, self.health["hunger"] - target.eat(.2))
+			self.health["hunger"] = max(0, self.health["hunger"] - target.eat(.1))
 			#print("Eating: " + str(self.health["hunger"]))
 		else:
 			#print("not eating")
@@ -190,7 +193,7 @@ class Animal(Entity):
 
 	def reproduce(self):
 		if (random.random() < .01):
-			self.lastReproductionTime = self.ticks_alive
+			self.lastReproductionTime = self.health["age"]
 			print("WE MADE A BABY")
 			self.state = "reproduced"
 			self.health["reproductive_urge"] = 0
@@ -198,7 +201,7 @@ class Animal(Entity):
 	def sleep(self):
 		# we don't do anything except decrease the tiredness
 
-		self.health["tiredness"] = max(0, self.health["tiredness"] - (1 / self.tickstoDeathMovement) * 3)
+		self.health["tiredness"] = max(0, self.health["tiredness"] - (1 / self.tickstoDeathAwake) * 3)
 
 	
 	def evade(self, predator):
@@ -208,3 +211,8 @@ class Animal(Entity):
 			print(self.coord.angle2Coord(predator.coord))
 		self.coord.dir = self.coord.angle2Coord(predator.coord) + 180
 		self.move()
+	
+
+	def eat(self):
+		raise Exception("Must implement get eaten")
+		# what happens when this animal gets eaten
